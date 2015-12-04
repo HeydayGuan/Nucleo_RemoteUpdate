@@ -456,6 +456,11 @@
                 </FileArmAds>
               </FileOption>
             </File>
+            <File>
+              <FileName>remoteupdate.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>.\remoteupdate.cpp</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

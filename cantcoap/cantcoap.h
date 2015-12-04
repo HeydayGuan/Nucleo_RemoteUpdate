@@ -1,4 +1,6 @@
 /// Copyright (c) 2013, Ashley Mills.
+#ifndef __CANTCOAP_H__
+#define __CANTCOAP_H__
 #define MBED
 #ifndef MBED
 #include <unistd.h>
@@ -158,6 +160,7 @@ class CoapPDU {
 		// gets a list of all options
 		CoapOption* getOptions();
 		int getNumOptions();
+		int getOptionsBlock2Next();
 		// shorthand helpers
 		int setURI(char *uri, int urilen);
 		int getURI(char *dst, int dstlen, int *outLen);
@@ -252,3 +255,4 @@ class CoapPDU {
 #define COAP_CODE_GATEWAY_TIMEOUT            0xA4
 #define COAP_CODE_PROXYING_NOT_SUPPORTED     0xA5
 */
+#endif

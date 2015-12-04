@@ -821,6 +821,28 @@ int CoapPDU::getNumOptions() {
 	return _numOptions;
 }
 
+// return 0 is no the last packet, 1 is the last packet
+int CoapPDU::getOptionsBlock2Next() {
+	// print options
+	CoapPDU::CoapOption* options = getOptions();
+	for(int i=0; i<_numOptions; i++) {
+		INFO("OPTION (%d/%d)",i,_numOptions);
+		INFO("   Option number (delta): %hu (%hu)",options[i].optionNumber,options[i].optionDelta);
+		if(options[i].optionNumber == COAP_OPTION_BLOCK2) {
+			char value = 0;
+			if (options[i].optionValueLength == 1)
+				value = *options[i].optionValuePointer;
+			else if (options[i].optionValueLength == 2)
+				value = *(options[i].optionValuePointer+1);
+
+			printf("\rget value is 0x%02X......\n", value);
+			if (value & 0x08)
+				return 1;
+		}
+	}
+
+	return 0;
+}
 
 /**
  * This returns the options as a sequence of structs.

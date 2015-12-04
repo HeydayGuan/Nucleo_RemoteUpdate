@@ -137,7 +137,7 @@ public:
     MbedJSONValue(int value)  : _type(TypeInt), index_array(0), index_token(0) {
         _value.asInt = value;
     }
-    
+
     /**
     * MbedJSONValue constructor of type TypeDouble
     *
@@ -192,7 +192,7 @@ public:
     * @return a reference on the MbedJSONValue affected
     */
     MbedJSONValue& operator=(int const& rhs) { return operator=(MbedJSONValue(rhs));  }
-    
+
     /**
     * = Operator overloading for an MbedJSONValue from a boolean
     *
@@ -228,7 +228,7 @@ public:
     */
     MbedJSONValue& operator[](int i);
     
-    /**
+	/**
     * [] Operator overloading for an MbedJSONValue.
     * Each TypeObject MbedJSONValue can contain NB_TOKEN MbedJSONValue IDENTIFIED BY A NAME 
     * This operator is useful to create a TypeObject MbedJSONValue or to retrieve an MbedJSONValue of an existing TypeObject.
