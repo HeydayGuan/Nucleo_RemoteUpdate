@@ -17,6 +17,17 @@ Queue<char, 1> queue;
 char userFirmwareSendCompleteFlag;
 struct stm32f411xx_baseboard_id header;
 
+Ticker NetLED_ticker;
+Ticker DataLED_ticker;
+DigitalOut netLed(PA_0, 1);
+DigitalOut dataLed(PB_1, 1);
+void toggle_NetLed() {
+    netLed = !netLed;
+}
+void toggle_DataLed() {
+	dataLed = !dataLed;
+}
+
 void pppSurfing(void const*) {
 	startRemoteUpdate(&queue);
 }
@@ -29,7 +40,6 @@ void userFirmwareSend(void const*) {
 	flash25spi w25q64(&spi, PB_12);
 
 	Serial userCom(PA_9, PA_10); //UART1; tx, rx
-	DigitalOut userLed(PA_0, 1);
 
 	printf("Start userFirmwareSend thread.........\n");
 	while (true) {
@@ -40,11 +50,13 @@ void userFirmwareSend(void const*) {
 			printf("Get osEventMessage value id is %c\n", *ch);
 		}
 
+		DataLED_ticker.detach();
+		dataLed = 0;	//download is over, the led is on
 		while (userFWPro.getUserVersion()) {
-			userLed = !userLed;
 			Thread::wait(500);
 		}
 
+		DataLED_ticker.attach(&toggle_DataLed, 0.1);
 		UINT32 blockAddr = USER_IMG_MAP_BUF_CLEAR_FLAG;
 		for (int i = 0; i < 2; i++) {
 			int bufFlagValue;
@@ -66,6 +78,7 @@ void userFirmwareSend(void const*) {
 		}
 		if (blockAddr == USER_IMG_MAP_BUF_CLEAR_FLAG) {
 			INFO("No valid flash is available .");
+			DataLED_ticker.detach();
 			return;
 		}
 		for (int j = 0; j < updateinfo.fileLength/BAG_SIZE + 2; j++) {
@@ -75,6 +88,7 @@ void userFirmwareSend(void const*) {
 			}
 			if (userFWPro.sendUserFirmware(readBuf, BAG_SIZE, updateinfo.fileLength)) {
 				INFO("Send user firmware failure");
+				DataLED_ticker.detach();
 				continue;
 			}
 			printf("...");
@@ -82,10 +96,11 @@ void userFirmwareSend(void const*) {
 
 		if (userFWPro.runUserFirmware()) {
 			INFO("Run user firmware failure\n");
-			continue;
 		} else {
 			userFirmwareSendCompleteFlag = 1;
 		}
+		DataLED_ticker.detach();
+		dataLed = 1;	//send bytes is over, the led is off
 	}
 }
 
@@ -192,6 +207,7 @@ int main() {
 		}
 	}
 
+	NetLED_ticker.attach(&toggle_NetLed, 3);	//net is disconnect
 	// connect to cellular network
 	HuaweiUSBCDMAModem modem(NC, true);
     if (modem.connect(MODEM_APN, MODEM_USERNAME, MODEM_PASSWORD) != OK) {
@@ -199,6 +215,8 @@ int main() {
 		return -2;
 	}
 
+	NetLED_ticker.detach();
+	NetLED_ticker.attach(&toggle_NetLed, 0.5);	//net is connect
 	Thread pppSurfingTask(pppSurfing, NULL, osPriorityNormal, 1024 * 8);
 
 	Thread userFirmwareSendTask(userFirmwareSend, NULL, osPriorityNormal, 1024 * 10);

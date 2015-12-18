@@ -9,6 +9,7 @@ static char deviceUniqId[25];
 static char updateCommandFlag;
 static char recvBuffer[RECVBUFLEN];
 GetUpdateinfo updateinfo;
+char lostConnectionFlag = 0;
 
 int deviceRegister(int sockfd) {
 	char buffer[BUFLEN];
@@ -157,6 +158,9 @@ int deviceStatusReport(int sockfd, char status) {
 			pdu->reset();
 			delete pdu;
             perror(NULL);
+			lostConnectionFlag = 1;
+			NetLED_ticker.detach();
+			NetLED_ticker.attach(&toggle_NetLed, 3);	//net is connect
             return -2;
         }
         INFO("Packet sent");
@@ -168,6 +172,9 @@ int deviceStatusReport(int sockfd, char status) {
 			pdu->reset();
 			delete pdu;
             perror(NULL);
+			lostConnectionFlag = 1;
+			NetLED_ticker.detach();
+			NetLED_ticker.attach(&toggle_NetLed, 3);	//net is connect
             return -3;
         }
         INFO("Received %d bytes from %s:%d",ret,inet_ntoa(fromAddr.sin_addr),ntohs(fromAddr.sin_port));
@@ -204,10 +211,15 @@ int deviceStatusReport(int sockfd, char status) {
 			delete recvPDU;
 			pdu->reset();
 			delete pdu;
+			if (lostConnectionFlag == 1) {
+				lostConnectionFlag = 0;
+				NetLED_ticker.detach();
+				NetLED_ticker.attach(&toggle_NetLed, 0.5);	//net is again connect
+			}
 			return 0;
 		} else
 			tryNum--;
-		
+			
 		recvPDU->reset();
 		delete recvPDU;
         Thread::wait(3000);
@@ -330,6 +342,8 @@ int deviceGetUpdateinfo(int sockfd) {
 }
 
 int deviceGetSaveUpdatefile(int sockfd, int type) {
+	DataLED_ticker.detach();
+	DataLED_ticker.attach(&toggle_DataLed, 0.1);
 	MbedJSONValue json;
 	json["devUniqId"] = (string)deviceUniqId;
 	json["type"] = updateinfo.type;
@@ -393,7 +407,7 @@ int deviceGetSaveUpdatefile(int sockfd, int type) {
 		return  -1;
 	}
 
-	int tryNum = 5;
+	int tryNum1 = 5, tryNum2 = 5;
 	do {
 		if (coapBlockNum%8 == 0)
 			deviceStatusReport(sockfd, type);
@@ -430,11 +444,12 @@ int deviceGetSaveUpdatefile(int sockfd, int type) {
 			pdu->reset();
 			delete pdu;
 			perror(NULL);
-			if (tryNum--)
+			if (tryNum1--)
 				continue;
 			else
 				return -3;
 		}
+		tryNum1 = 5;
 		INFO("Received %d bytes from %s:%d",ret,inet_ntoa(fromAddr.sin_addr),ntohs(fromAddr.sin_port));
 
 		if(ret>RECVBUFLEN) {
@@ -473,9 +488,13 @@ int deviceGetSaveUpdatefile(int sockfd, int type) {
 				delete pdu;
 				Thread::wait(1000);
 				nextCoapBlock = 1;
-				continue;
+				if (tryNum2--)
+					continue;
+				else
+					return -5;
 			}
 		}
+		tryNum2 = 5;
 		updateinfo.fileLength += payloadLen;
 
 		if (w25q64.write(blockAddr + coapBlockNum * 1024, payloadLen, payload) == false) {
@@ -607,21 +626,19 @@ void startRemoteUpdate(Queue<char, 1> *queue) {
     }
     DBG("\"Connected\" to UDP socket");
 
-	// register the device until register success
-	int ret = 0;
+	// register the device until register success or timeout 120s
+	int ret = 0, retryNum = 120;
 	do {
 		ret = deviceRegister(sockfd);
 		Thread::wait(1000);
-	} while(ret);
+	} while(ret && retryNum--);
 
 	printf("\rdeviceRegister is %s..........\n", ret == 0?"OK":"FAIL");
 	enum DeviceUpdateStep step = DEVICE_UPDATE_IDELING;
 	char tryNum = 5;
-	DigitalOut gprsLed(PC_5, 1);
 
 	// report the device status until
 	while (true) {
-		gprsLed = !gprsLed;
 		switch (step) {
 			case DEVICE_UPDATE_IDELING:
 				// start the device status report
