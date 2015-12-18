@@ -541,7 +541,7 @@ void sio_read_abort(sio_fd_t fd)
   /*Notice : Here there is a problem, need to be modified in the future. 
    *You need to implementation the pppSioAbortRead interface.
    */
-//  pIf->m_pStream->abortRead();
+  pIf->m_pStream->abortRead();
   Thread::wait(1000);
   DBG("sio_read_abort ret\r\n");
 }

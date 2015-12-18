@@ -17,7 +17,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#define __DEBUG__ 4
+#define __DEBUG__ 1
 #ifndef __MODULE__
 #define __MODULE__ "HuaweiUSBCDMAModem.cpp"
 #endif

@@ -45,7 +45,8 @@
 ;   <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
 
-Stack_Size      EQU     0x00000400
+; Stack_Size      EQU     0x00000400
+Stack_Size      EQU     0x00001000
 
                 AREA    STACK, NOINIT, READWRITE, ALIGN=3
                 EXPORT  __initial_sp
@@ -58,7 +59,8 @@ __initial_sp    EQU     0x20020000 ; Top of RAM
 ;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
 
-Heap_Size       EQU     0x00000400
+; Heap_Size       EQU     0x00000400
+Heap_Size       EQU     0x00000800
 
                 AREA    HEAP, NOINIT, READWRITE, ALIGN=3
                 EXPORT  __heap_base
