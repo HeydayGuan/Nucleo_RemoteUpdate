@@ -73,6 +73,8 @@ extern char userFirmwareSendCompleteFlag;
 extern GetUpdateinfo updateinfo;
 extern struct stm32f411xx_baseboard_id header;
 extern I2C i2c;		 //I2C1; SDA, SCL for i2c eeprom
+extern Ticker NetLED_ticker;
+extern Ticker DataLED_ticker;
 
 int deviceRegister(int sockfd);
 
@@ -87,4 +89,8 @@ bool connectToSocketUDP(char *, int, int *);
 void startRemoteUpdate(Queue<char, 1> *queue);
 
 int updateUserVersionNo(char *version);
+
+void toggle_NetLed(void);
+
+void toggle_DataLed(void);
 #endif
