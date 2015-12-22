@@ -70,17 +70,15 @@
 #define LWIP_TCP_KEEPALIVE          1
 
 // Debug Options
-#define LWIP_DEBUG
+// #define LWIP_DEBUG
 #define UDP_LPC_EMAC                LWIP_DBG_OFF
 #define SYS_DEBUG                   LWIP_DBG_OFF
 #define PPP_DEBUG                   LWIP_DBG_OFF
-//#define PPP_DEBUG                   LWIP_DBG_ON
 #define IP_DEBUG                    LWIP_DBG_OFF
-//#define IP_DEBUG                    LWIP_DBG_ON
 #define MEM_DEBUG                   LWIP_DBG_OFF
 #define MEMP_DEBUG                  LWIP_DBG_OFF
 #define PBUF_DEBUG                  LWIP_DBG_OFF
-#define API_LIB_DEBUsG               LWIP_DBG_OFF
+#define API_LIB_DEBUG               LWIP_DBG_OFF
 #define API_MSG_DEBUG               LWIP_DBG_OFF
 #define TCPIP_DEBUG                 LWIP_DBG_OFF
 #define SOCKETS_DEBUG               LWIP_DBG_OFF

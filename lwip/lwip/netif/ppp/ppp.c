@@ -1808,7 +1808,6 @@ pppInProc(PPPControlRx *pcrx, u_char *s, int l)
           pppDrop(pcrx);
         /* Otherwise it's a good packet so pass it on. */
         } else {
-			PPPDEBUG(LOG_INFO, ("pppInProc[%d]: it's a good packet, FCS is 0x%04X\n", pcrx->pd, pcrx->inFCS));
           struct pbuf *inp;
           /* Trim off the checksum. */
           if(pcrx->inTail->len >= 2) {
