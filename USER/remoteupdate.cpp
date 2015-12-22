@@ -343,7 +343,7 @@ int deviceGetUpdateinfo(int sockfd) {
 
 int deviceGetSaveUpdatefile(int sockfd, int type) {
 	DataLED_ticker.detach();
-	DataLED_ticker.attach(&toggle_DataLed, 0.1);
+	DataLED_ticker.attach(&toggle_DataLed, 0.3);
 	MbedJSONValue json;
 	json["devUniqId"] = (string)deviceUniqId;
 	json["type"] = updateinfo.type;
