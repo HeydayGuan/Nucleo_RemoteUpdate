@@ -362,7 +362,7 @@ int WANDongleSerialPort::checkResult(uint8_t res, USBEndpoint * ep) {
 int WANDongleSerialPort::atInstRead(char* data)
 {
 	/* Notice : Here there is a problem, need to be modified in the future. */
-	printf("........WANDongleSerialPort::atInstRead..........\n");
+//	printf("........WANDongleSerialPort::atInstRead..........\n");
 	memset(data, 0, sizeof(data));
 	USB_TYPE res = host->bulkRead(dev, (USBEndpoint *)bulk_in, (uint8_t *)data, ((USBEndpoint *)bulk_in)->getSize());
 	if (checkResult(res, bulk_in)) {
@@ -377,7 +377,7 @@ int WANDongleSerialPort::atInstRead(char* data)
 int WANDongleSerialPort::atInstWrite(const char* cmd)
 {
 	/* Notice : Here there is a problem, need to be modified in the future. */
-	printf("........WANDongleSerialPort::atInstWrite..........\n");
+//	printf("........WANDongleSerialPort::atInstWrite..........\n");
 	int cmd_len = strlen((const char *)cmd);
 	USB_TYPE res = host->bulkWrite(dev, (USBEndpoint *)bulk_out, (uint8_t *)cmd, cmd_len);
 	if (checkResult(res, bulk_out)) {

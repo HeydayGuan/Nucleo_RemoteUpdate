@@ -604,7 +604,7 @@ int updateUserVersionNo(char *version) {
 	return -1;
 }
 
-void startRemoteUpdate(Queue<char, 1> *queue) {
+void startRemoteUpdate() {
 	unsigned int mcuID[3] = {0};
 
 	mcuID[0] = *(__IO u32*)(0x1FFF7A10);
@@ -683,7 +683,7 @@ void startRemoteUpdate(Queue<char, 1> *queue) {
 				} while (ret && tryNum--);
 				if (ret == 0) {
 					char ch = 1;
-					queue->put(&ch);
+					queue.put(&ch);
 					step = USER_DEVICE_UPDATE_COMPLETE;
 				}
 				break;
@@ -710,7 +710,7 @@ void startRemoteUpdate(Queue<char, 1> *queue) {
 				step = DEVICE_UPDATE_IDELING;
 				break;
 		}
-		Thread::wait(5000);
+		Thread::wait(6000);
 	}
 
 	return ;

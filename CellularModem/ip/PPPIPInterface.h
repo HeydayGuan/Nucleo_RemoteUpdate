@@ -54,6 +54,7 @@ private:
     int cleanupLink();
 
     static void linkStatusCb(void *ctx, int errCode, void *arg); //PPP link status
+	static void statusChangesCb(struct netif *netif);
     Semaphore m_linkStatusSphre;
     int m_pppErrCode;
 

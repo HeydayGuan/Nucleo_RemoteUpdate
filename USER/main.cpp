@@ -14,6 +14,9 @@ Serial pc(USBTX, USBRX); 	 //UART2; tx, rx
 I2C    i2c(PB_3, PB_10);	 //I2C1; SDA, SCL for i2c eeprom
 
 Queue<char, 1> queue;
+Queue<char, 1> redial;
+char pppDialingSuccessFlag = 0;
+bool pppRedialingSuccessFlag = false;
 char userFirmwareSendCompleteFlag;
 struct stm32f411xx_baseboard_id header;
 
@@ -28,8 +31,44 @@ void toggle_DataLed() {
 	dataLed = !dataLed;
 }
 
+void pppDialing(void const*) {
+	HuaweiUSBCDMAModem modem(NC, true);
+
+	NetLED_ticker.attach(&toggle_NetLed, 3);	//net is disconnect
+	while (true) {
+		osEvent evt = redial.get();
+		char *ch;
+		if (evt.status == osEventMessage) {
+			ch = (char *)evt.value.p;
+			printf("Get redial osEventMessage value id is %d\n", *ch);
+		}
+
+		if (*ch == 1) {
+			while(pppRedialingSuccessFlag == false) {
+				// connect to redial cellular network
+				if (modem.connect(MODEM_APN, MODEM_USERNAME, MODEM_PASSWORD) != OK) {
+					INFO("Could connect the mobile gprs server, please check the Huawei modem or sim card.");
+					Thread::wait(5000);
+				}
+			}
+		} else {
+			// connect to cellular network
+			if (modem.connect(MODEM_APN, MODEM_USERNAME, MODEM_PASSWORD) != OK) {
+				INFO("Could connect the mobile gprs server, please check the Huawei modem or sim card.");
+			} else {
+				pppDialingSuccessFlag = 1;
+			}
+		}
+	}
+}
+
 void pppSurfing(void const*) {
-	startRemoteUpdate(&queue);
+	while (pppDialingSuccessFlag == 0) {
+		Thread::wait(500);
+	}
+	NetLED_ticker.detach();
+	NetLED_ticker.attach(&toggle_NetLed, 0.5);	//net is connect
+	startRemoteUpdate();
 }
 
 void userFirmwareSend(void const*) {
@@ -47,7 +86,7 @@ void userFirmwareSend(void const*) {
 		osEvent evt = queue.get();
 		if (evt.status == osEventMessage) {
 			char *ch = (char *)evt.value.p;
-			printf("Get osEventMessage value id is %c\n", *ch);
+			printf("Get userFirmwareSend osEventMessage value id is %d\n", *ch);
 		}
 
 		DataLED_ticker.detach();
@@ -185,7 +224,24 @@ static int write_eeprom(struct stm32f411xx_baseboard_id *header)
 	return -1;
 }
 
+void wdFeed(void const*) {
+    DigitalOut wdEnable(PA_1, 1);
+    DigitalOut wdWDI(PB_0, 0);
+
+    wdEnable = 0;
+
+	//The watchdog timeout is 120ms ----1.6s
+    while (true) {
+        wdWDI = 0;
+        Thread::wait(1000);
+        wdWDI = 1;
+        Thread::wait(1000);
+    }
+}
+
 int main() {
+//	Thread wdFeedTask(wdFeed, NULL, osPriorityNormal, 256);
+
     DBG_INIT();
     DBG_SET_SPEED(115200);
     DBG_SET_NEWLINE("\r\n");
@@ -207,19 +263,13 @@ int main() {
 		}
 	}
 
-	NetLED_ticker.attach(&toggle_NetLed, 3);	//net is disconnect
-	// connect to cellular network
-	HuaweiUSBCDMAModem modem(NC, true);
-    if (modem.connect(MODEM_APN, MODEM_USERNAME, MODEM_PASSWORD) != OK) {
-		INFO("Could connect the mobile gprs server, please check the Huawei modem or sim card.");
-		return -2;
-	}
+	Thread pppDialTask(pppDialing, NULL, osPriorityNormal, 1024 * 4);
 
-	NetLED_ticker.detach();
-	NetLED_ticker.attach(&toggle_NetLed, 0.5);	//net is connect
-	Thread pppSurfingTask(pppSurfing, NULL, osPriorityNormal, 1024 * 8);
+	Thread pppSurfingTask(pppSurfing, NULL, osPriorityNormal, 1024 * 6);
 
 	Thread userFirmwareSendTask(userFirmwareSend, NULL, osPriorityNormal, 1024 * 10);
+
+	redial.put(&pppDialingSuccessFlag);
 
 	DigitalOut mcuLed(LED1);
 	while(1)

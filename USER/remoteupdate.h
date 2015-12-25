@@ -69,6 +69,10 @@ typedef struct{
 	char *byteStream;
 } GetUpdateinfo;
 
+extern Queue<char, 1> queue;
+extern Queue<char, 1> redial;
+extern char pppDialingSuccessFlag;
+extern bool pppRedialingSuccessFlag;
 extern char userFirmwareSendCompleteFlag;
 extern GetUpdateinfo updateinfo;
 extern struct stm32f411xx_baseboard_id header;
@@ -86,7 +90,7 @@ int deviceGetSaveUpdatefile(int sockfd);
 
 bool connectToSocketUDP(char *, int, int *);
 
-void startRemoteUpdate(Queue<char, 1> *queue);
+void startRemoteUpdate(void);
 
 int updateUserVersionNo(char *version);
 

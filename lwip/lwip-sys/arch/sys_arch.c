@@ -365,8 +365,13 @@ u32_t sys_jiffies(void) {
  *      sys_prot_t              -- Previous protection level (not used here)
  *---------------------------------------------------------------------------*/
 sys_prot_t sys_arch_protect(void) {
-    if (osMutexWait(lwip_sys_mutex, osWaitForever) != osOK)
-        error("sys_arch_protect error\n");
+	osStatus ret = 0, tryNum = 100;
+	do {
+		ret = osMutexWait(lwip_sys_mutex, osWaitForever);
+	} while(ret != osOK && tryNum--);
+	if (tryNum == 0 && ret != osOK)
+        error("sys_arch_unprotect error\n", ret);
+
     return (sys_prot_t) 1;
 }
 
@@ -382,8 +387,12 @@ sys_prot_t sys_arch_protect(void) {
  *      sys_prot_t              -- Previous protection level (not used here)
  *---------------------------------------------------------------------------*/
 void sys_arch_unprotect(sys_prot_t p) {
-    if (osMutexRelease(lwip_sys_mutex) != osOK)
-        error("sys_arch_unprotect error\n");
+	osStatus ret = 0, tryNum = 100;
+	do {
+		ret = osMutexRelease(lwip_sys_mutex);
+	} while (ret != osOK && tryNum--);
+    if (tryNum == 0 && ret != osOK)
+        error("sys_arch_unprotect error\n", ret);
 }
 
 u32_t sys_now(void) {

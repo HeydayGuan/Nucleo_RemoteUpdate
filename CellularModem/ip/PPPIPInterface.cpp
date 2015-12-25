@@ -17,7 +17,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#define __DEBUG__ 4
+#include "remoteupdate.h"
+
+#define __DEBUG__  4
 #ifndef __MODULE__
 #define __MODULE__ "PPPIPInterface.cpp"
 #endif
@@ -80,6 +82,11 @@ int PPPIPInterface::setup(const char* user, const char* pw, const char* msisdn)
   m_msisdn = msisdn;
   DBG("Done");
   return OK;
+}
+
+void PPPIPInterface::statusChangesCb(struct netif *netif) {
+	INFO("............PPP connect status changes............");
+	//Send the redial signal
 }
 
 /*virtual*/ int PPPIPInterface::connect()
@@ -211,6 +218,7 @@ int PPPIPInterface::setup(const char* user, const char* pw, const char* msisdn)
   }
   m_pppd = ret; //PPP descriptor
   m_linkStatusSphre.wait(); //Block indefinitely; there should be a timeout there
+  ppp_set_netif_statuscallback(m_pppd, PPPIPInterface::statusChangesCb);
   if(m_pppErrCode != PPPERR_NONE)
   {
     m_pppd = -1;
@@ -426,13 +434,15 @@ int PPPIPInterface::cleanupLink()
     {
       dns_setserver(1, (struct ip_addr*)&(addrs->dns1));
     }
-        
     pIf->setConnected(true);
     pIf->setIPAddress(inet_ntoa(addrs->our_ipaddr));
+	pppRedialingSuccessFlag = true;
     break;
   case PPPERR_CONNECT: //Connection lost
     WARN("Connection lost/terminated");
+	pppRedialingSuccessFlag = false;
     pIf->setConnected(false);
+	redial.put(&pppDialingSuccessFlag);
     break;
   case PPPERR_AUTHFAIL: //Authentication failed
     WARN("Authentication failed");
