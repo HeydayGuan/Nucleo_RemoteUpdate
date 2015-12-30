@@ -117,7 +117,11 @@ void sys_mbox_free(sys_mbox_t *mbox) {
  *      void *msg              -- Pointer to data to post
  *---------------------------------------------------------------------------*/
 void sys_mbox_post(sys_mbox_t *mbox, void *msg) {
-    if (osMessagePut(mbox->id, (uint32_t)msg, osWaitForever) != osOK)
+	osStatus ret = 0, tryNum = 100;
+	do {
+		ret = osMessagePut(mbox->id, (uint32_t)msg, osWaitForever);
+	} while(ret != osOK && tryNum--);
+	if (ret != osOK)
         error("sys_mbox_post error\n");
 }
 
@@ -302,14 +306,22 @@ err_t sys_mutex_new(sys_mutex_t *mutex) {
 /** Lock a mutex
  * @param mutex the mutex to lock */
 void sys_mutex_lock(sys_mutex_t *mutex) {
-    if (osMutexWait(mutex->id, osWaitForever) != osOK)
+	osStatus ret = 0, tryNum = 100;
+	do {
+		ret = osMutexWait(mutex->id, osWaitForever);
+	} while(ret != osOK && tryNum--);
+	if (ret != osOK)
         error("sys_mutex_lock error\n");
 }
 
 /** Unlock a mutex
  * @param mutex the mutex to unlock */
 void sys_mutex_unlock(sys_mutex_t *mutex) {
-    if (osMutexRelease(mutex->id) != osOK)
+	osStatus ret = 0, tryNum = 100;
+	do {
+		ret = osMutexRelease(mutex->id);
+	} while (ret != osOK && tryNum--);
+    if (ret != osOK)
         error("sys_mutex_unlock error\n");
 }
 
@@ -369,8 +381,8 @@ sys_prot_t sys_arch_protect(void) {
 	do {
 		ret = osMutexWait(lwip_sys_mutex, osWaitForever);
 	} while(ret != osOK && tryNum--);
-	if (tryNum == 0 && ret != osOK)
-        error("sys_arch_unprotect error\n", ret);
+	if (ret != osOK)
+        error("sys_arch_protect error\n");
 
     return (sys_prot_t) 1;
 }
@@ -391,8 +403,8 @@ void sys_arch_unprotect(sys_prot_t p) {
 	do {
 		ret = osMutexRelease(lwip_sys_mutex);
 	} while (ret != osOK && tryNum--);
-    if (tryNum == 0 && ret != osOK)
-        error("sys_arch_unprotect error\n", ret);
+    if (ret != osOK)
+        error("sys_arch_unprotect error\n");
 }
 
 u32_t sys_now(void) {
