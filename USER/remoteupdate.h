@@ -37,7 +37,7 @@
 #define USER_IMG_MAP_BUF_VAILE_FLAG	0x04030201
 #define USER_IMG_MAP_BUF_FLAG_LEN	0x04	//4bytes buf flag, 0xFFFFFFFF is alread erased.
 #define USER_IMG_MAP_BUF_START	0x00		//The user image start address in flash.
-#define USER_IMG_MAP_BUF_SIZE	0x10000		//64Kbytes, The user iamge buffer size
+#define USER_IMG_MAP_BUF_SIZE	0x40000		//256Kbytes, The user iamge buffer size
 #define USER_IMG_MAP_BLOCK_SIZE	0x8000		//32Kbytes, The flash block size
 
 enum DeviceUpdateStep{DEVICE_UPDATE_IDELING = 0x20, DEVICE_UPDATE_COMMAND,

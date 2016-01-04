@@ -244,8 +244,10 @@ int ATCommandsInterface::preProcessReadLine()
 
 #if 0
         //Discard all preceding characters (can do nothing if m_inputBuf == crPtr)
-        memmove(m_inputBuf, crPtr, (m_inputPos + 1) - (crPtr-m_inputBuf)); //Move null-terminating char as well
-        m_inputPos = m_inputPos - (crPtr-m_inputBuf); //Adjust m_inputPos
+		if ((m_inputPos + 1) - (crPtr-m_inputBuf) <= sizeof(m_inputBuf)) {
+			memmove(m_inputBuf, crPtr, (m_inputPos + 1) - (crPtr-m_inputBuf)); //Move null-terminating char as well
+			m_inputPos = m_inputPos - (crPtr-m_inputBuf); //Adjust m_inputPos
+		}
 #endif
 
         //If the line starts with CR, this should be a result code
@@ -271,15 +273,19 @@ int ATCommandsInterface::preProcessReadLine()
               }
               //In both cases discard CRLF
               DBG("Discarding CRLF");
-              memmove(m_inputBuf, m_inputBuf + 2, (m_inputPos + 1) - 2); //Move null-terminating char as well
-              m_inputPos = m_inputPos - 2; //Adjust m_inputPos
+			  if ((m_inputPos + 1) - 2 <= sizeof(m_inputBuf)) {
+				memmove(m_inputBuf, m_inputBuf + 2, (m_inputPos + 1) - 2); //Move null-terminating char as well
+				m_inputPos = m_inputPos - 2; //Adjust m_inputPos
+			  }
             }
             else
             {
               //This is completely unexpected, discard the CR char to try to recover good state
               WARN("Unexpected %c char (%02d code) found after CR char", m_inputBuf[1]);
-              memmove(m_inputBuf, m_inputBuf + 1, (m_inputPos + 1) - 1); //Move null-terminating char as well
-              m_inputPos = m_inputPos - 1; //Adjust m_inputPos
+			  if ((m_inputPos + 1) - 1 <= sizeof(m_inputBuf)) {
+				memmove(m_inputBuf, m_inputBuf + 1, (m_inputPos + 1) - 1); //Move null-terminating char as well
+				m_inputPos = m_inputPos - 1; //Adjust m_inputPos
+			  }
             }
           }
         }
@@ -313,8 +319,10 @@ int ATCommandsInterface::preProcessReadLine()
           //If sendData has been called, all incoming data has been discarded
           if(m_inputPos > 0)
           {
-            memmove(m_inputBuf, m_inputBuf + crPos + lfOff + 1, (m_inputPos + 1) - (crPos + lfOff + 1)); //Move null-terminating char as well
-            m_inputPos = m_inputPos - (crPos + lfOff + 1); //Adjust m_inputPos
+			if ((m_inputPos + 1) - (crPos + lfOff + 1) <= sizeof(m_inputBuf)) {
+				memmove(m_inputBuf, m_inputBuf + crPos + lfOff + 1, (m_inputPos + 1) - (crPos + lfOff + 1)); //Move null-terminating char as well
+				m_inputPos = m_inputPos - (crPos + lfOff + 1); //Adjust m_inputPos
+			}
           }
           DBG("One line was successfully processed");
           lineProcessed = true; //Line was processed with success
@@ -324,8 +332,10 @@ int ATCommandsInterface::preProcessReadLine()
       else if(m_inputBuf[0] == LF) //If there is a remaining LF char from the previous line, discard it
       {
         DBG("Discarding single LF char");
-        memmove(m_inputBuf, m_inputBuf + 1, (m_inputPos + 1) - 1); //Move null-terminating char as well
-        m_inputPos = m_inputPos - 1; //Adjust m_inputPos
+		if ((m_inputPos + 1) - 1 <= sizeof(m_inputBuf)) {
+			memmove(m_inputBuf, m_inputBuf + 1, (m_inputPos + 1) - 1); //Move null-terminating char as well
+			m_inputPos = m_inputPos - 1; //Adjust m_inputPos
+		}
       }
     }
 
@@ -376,8 +386,14 @@ int ATCommandsInterface::preProcessReadLine()
             if(m_inputPos > 0)
             {
               //Shift remaining data to beginning of buffer
-              memmove(m_inputBuf, m_inputBuf + crPos + 2, (m_inputPos + 1) - (crPos + 2)); //Move null-terminating char as well
-              m_inputPos = m_inputPos - (crPos + 2); //Adjust m_inputPos
+			  if ((m_inputPos + 1) - (crPos + 2) > sizeof(m_inputBuf)) {
+				m_inputPos = 0;
+				m_inputBuf[0] = '\0'; //Always have a null-terminating char at start of buffer
+				lineDetected = false;
+				return -1;
+			  }
+			  memmove(m_inputBuf, m_inputBuf + crPos + 2, (m_inputPos + 1) - (crPos + 2)); //Move null-terminating char as well
+			  m_inputPos = m_inputPos - (crPos + 2); //Adjust m_inputPos
             }
 
             DBG("One line was successfully processed");
@@ -387,8 +403,10 @@ int ATCommandsInterface::preProcessReadLine()
           {
             //This is completely unexpected, discard all chars till the CR char to try to recover good state
             WARN("Unexpected %c char (%02d code) found in incoming line", m_inputBuf[crPos + 1]);
-            memmove(m_inputBuf, m_inputBuf + crPos + 1, (m_inputPos + 1) - (crPos + 1)); //Move null-terminating char as well
-            m_inputPos = m_inputPos - (crPos + 1); //Adjust m_inputPos
+			if ((m_inputPos + 1) - (crPos + 1) <= sizeof(m_inputBuf)) {
+				memmove(m_inputBuf, m_inputBuf + crPos + 1, (m_inputPos + 1) - (crPos + 1)); //Move null-terminating char as well
+				m_inputPos = m_inputPos - (crPos + 1); //Adjust m_inputPos
+			}
           }
           lineDetected = false; //In both case search now for a new line
         }
@@ -408,8 +426,10 @@ int ATCommandsInterface::preProcessReadLine()
             m_inputBuf[gdPos] = '\0';
 
             //Shift remaining data to beginning of buffer
-            memmove(m_inputBuf, m_inputBuf + gdPos + 1, (m_inputPos + 1) - (gdPos + 1)); //Move null-terminating char as well
-            m_inputPos = m_inputPos - (gdPos + 1); //Adjust m_inputPos
+			if ((m_inputPos + 1) - (gdPos + 1) <= sizeof(m_inputBuf)) {
+				memmove(m_inputBuf, m_inputBuf + gdPos + 1, (m_inputPos + 1) - (gdPos + 1)); //Move null-terminating char as well
+				m_inputPos = m_inputPos - (gdPos + 1); //Adjust m_inputPos
+			}
 
             //Process prompt
             ret = processEntryPrompt();
@@ -428,8 +448,10 @@ int ATCommandsInterface::preProcessReadLine()
           {
             //This is completely unexpected, discard all chars till the GD char to try to recover good state
             WARN("Unexpected %c char (%02d code) found in incoming line", m_inputBuf[gdPos + 1]);
-            memmove(m_inputBuf, m_inputBuf + gdPos + 1, (m_inputPos + 1) - (gdPos + 1)); //Move null-terminating char as well
-            m_inputPos = m_inputPos - (gdPos + 1); //Adjust m_inputPos
+			if ((m_inputPos + 1) - (gdPos + 1) <= sizeof(m_inputBuf)) {
+				memmove(m_inputBuf, m_inputBuf + gdPos + 1, (m_inputPos + 1) - (gdPos + 1)); //Move null-terminating char as well
+				m_inputPos = m_inputPos - (gdPos + 1); //Adjust m_inputPos
+			}
           }
           lineDetected = false; //In both case search now for a new line
         }

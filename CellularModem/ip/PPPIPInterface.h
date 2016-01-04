@@ -33,8 +33,6 @@ using namespace rtos;
 
 #define DEFAULT_MSISDN_GSM    "*99#"
 #define DEFAULT_MSISDN_CDMA   "#777"
-#define DEFAULT_MSISDN_SCDMA  "*98*1#"
-#define DEFAULT_MSISDN_GPRS   "*99***1#"
 
 /** Interface using PPP to connect to an IP-based network
  *

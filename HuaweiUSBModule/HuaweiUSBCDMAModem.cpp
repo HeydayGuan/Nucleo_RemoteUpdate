@@ -67,7 +67,7 @@ private:
   {
     char b;
 		char bc[3] = "";
-		int sid = 99999; 
+		int sid = 99999;
 		
     //if( sscanf(line, "%*d, %c", &r) == 1 )
     if(sscanf(line, "%*s %c,%2s,%d", &b,bc,&sid)==3)
@@ -138,7 +138,7 @@ int HuaweiUSBCDMAModem::connect(const char* apn, const char* user, const char* p
     m_ipInit = true;
     m_ppp.init();
   }
-  m_ppp.setup(user, password, DEFAULT_MSISDN_SCDMA);
+  m_ppp.setup(user, password, DEFAULT_MSISDN_GSM);
 
   int ret = init();
   if(ret)

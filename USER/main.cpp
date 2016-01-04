@@ -4,8 +4,13 @@
 #include "userfirmwarepro.h"
 
 #define MY_DEBUG 0
+#define CHINA_MOBILE 1
 
+#if CHINA_MOBILE
 #define MODEM_APN "CMNET"
+#else
+#define MODEM_APN "3GNET"
+#endif
 #define MODEM_USERNAME NULL
 #define MODEM_PASSWORD NULL
 
@@ -40,7 +45,7 @@ void pppDialing(void const*) {
 		char *ch;
 		if (evt.status == osEventMessage) {
 			ch = (char *)evt.value.p;
-			printf("Get redial osEventMessage value id is %d\n", *ch);
+			INFO("Get redial osEventMessage value id is %d\n", *ch);
 		}
 
 		if (*ch == 1) {
@@ -77,16 +82,20 @@ void userFirmwareSend(void const*) {
 	spi.format(8, 0);
 	spi.frequency(16 * 1000 * 1000);
 	flash25spi w25q64(&spi, PB_12);
+#if 0
+	for (int i = 0; i < USER_IMG_MAP_BUF_SIZE*2/USER_IMG_MAP_BLOCK_SIZE; i++)
+		w25q64.clearBlock(0x00000 + i * USER_IMG_MAP_BLOCK_SIZE);
+#endif
 
 	Serial userCom(PA_9, PA_10); //UART1; tx, rx
 
-	printf("Start userFirmwareSend thread.........\n");
+	INFO("Start userFirmwareSend thread.........\n");
 	while (true) {
 		userfwpro userFWPro(&userCom);
 		osEvent evt = queue.get();
 		if (evt.status == osEventMessage) {
 			char *ch = (char *)evt.value.p;
-			printf("Get userFirmwareSend osEventMessage value id is %d\n", *ch);
+			INFO("Get userFirmwareSend osEventMessage value id is %d\n", *ch);
 		}
 
 		DataLED_ticker.detach();
@@ -104,8 +113,8 @@ void userFirmwareSend(void const*) {
 				INFO("Read user image bufFlagValue from flash failure");
 				continue;
 			}
-			printf("block%d, blockAddr[0x%08X], bufFlagValue[0x%08X].........\n", i,
-					USER_IMG_MAP_BUF_START + i * USER_IMG_MAP_BUF_SIZE, bufFlagValue);
+//			printf("block%d, blockAddr[0x%08X], bufFlagValue[0x%08X].........\n", i,
+//					USER_IMG_MAP_BUF_START + i * USER_IMG_MAP_BUF_SIZE, bufFlagValue);
 			if (bufFlagValue == USER_IMG_MAP_BUF_VAILE_FLAG) {
 				if (i == 0) {
 					blockAddr = USER_IMG_MAP_BUF_START + USER_IMG_MAP_BUF_FLAG_LEN;
@@ -130,7 +139,7 @@ void userFirmwareSend(void const*) {
 				DataLED_ticker.detach();
 				continue;
 			}
-			printf("...");
+			printf(".");
 		}
 
 		if (userFWPro.runUserFirmware()) {
@@ -156,13 +165,13 @@ static int read_eeprom(struct stm32f411xx_baseboard_id *header) {
 		//write the address you want to read
 		char data[] = { 0, 0 };
 		if ((i2c_stat = i2c.write(EEPROM_MEM_ADDR, data, 2, true)) != 0) {
-			printf("Test %d failed at write, i2c_stat is 0x%02X\r\n", i, i2c_stat);
+			INFO("Test %d failed at write, i2c_stat is 0x%02X\r\n", i, i2c_stat);
 			continue;
 		}
 
 		/* read the eeprom using i2c */
 		if ((i2c_stat = i2c.read(EEPROM_MEM_ADDR, (char *)header, sizeof(struct stm32f411xx_baseboard_id))) != 0) {
-			printf("Test %d failed at read, i2c_stat is 0x%02X\r\n", i, i2c_stat);
+			INFO("Test %d failed at read, i2c_stat is 0x%02X\r\n", i, i2c_stat);
 			continue;
 		}
 		break;
@@ -205,7 +214,7 @@ static int write_eeprom(struct stm32f411xx_baseboard_id *header)
 	// Write stm32f411 header data to eeprom using i2c
 	for (int i = 0; i < ntests; i++) {
 		if ((i2c_stat = i2c.write(EEPROM_MEM_ADDR, data, sizeof(struct stm32f411xx_baseboard_id) + 2)) != 0) {
-			printf("Unable to write data to EEPROM (i2c_stat = 0x%02X), aborting\r\n", i2c_stat);
+			INFO("Unable to write data to EEPROM (i2c_stat = 0x%02X), aborting\r\n", i2c_stat);
 			continue;
 		}
 
@@ -252,7 +261,7 @@ int main() {
 	{
 		const int i2c_freq_hz = 400000;
 		i2c.frequency(i2c_freq_hz);
-		printf("I2C: I2C Frequency: %d Hz\r\n", i2c_freq_hz);
+		INFO("I2C: I2C Frequency: %d Hz\r\n", i2c_freq_hz);
 
 		if (read_eeprom(&header) < 0) {
 			INFO("Could not get board ID, the is the first identify the board?");

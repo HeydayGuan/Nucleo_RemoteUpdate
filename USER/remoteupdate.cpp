@@ -372,12 +372,6 @@ int deviceGetSaveUpdatefile(int sockfd, int type) {
 	UINT32 blockAddr = USER_IMG_MAP_BUF_CLEAR_FLAG;
 	UINT32 brotherBlockAddr = USER_IMG_MAP_BUF_CLEAR_FLAG;
 
-#if 0
-	w25q64.clearBlock(0x00);
-	w25q64.clearBlock(0x8000);
-	w25q64.clearBlock(0x10000);
-	w25q64.clearBlock(0x18000);
-#endif
 	for (int i = 0; i < 2; i++) {
 		int bufFlagValue;
 		if (w25q64.read(USER_IMG_MAP_BUF_START + i * USER_IMG_MAP_BUF_SIZE, 
@@ -385,8 +379,8 @@ int deviceGetSaveUpdatefile(int sockfd, int type) {
 			INFO("Read user image bufFlagValue from flash failure");
 			continue;
 		}
-		printf("block%d, blockAddr[0x%08X], bufFlagValue[0x%08X].........\n", i,
-				USER_IMG_MAP_BUF_START + i * USER_IMG_MAP_BUF_SIZE, bufFlagValue);
+//		printf("block%d, blockAddr[0x%08X], bufFlagValue[0x%08X].........\n", i,
+//				USER_IMG_MAP_BUF_START + i * USER_IMG_MAP_BUF_SIZE, bufFlagValue);
 		if (bufFlagValue == USER_IMG_MAP_BUF_CLEAR_FLAG) {
 			int bufFlag = USER_IMG_MAP_BUF_VAILE_FLAG;
 			w25q64.write(USER_IMG_MAP_BUF_START + i * USER_IMG_MAP_BUF_SIZE, USER_IMG_MAP_BUF_FLAG_LEN, (char *)&bufFlag);
@@ -710,7 +704,7 @@ void startRemoteUpdate() {
 				step = DEVICE_UPDATE_IDELING;
 				break;
 		}
-		Thread::wait(6000);
+		Thread::wait(5000);
 	}
 
 	return ;
